@@ -6,6 +6,8 @@ import express from 'express';
 import { prismaClient } from '../clients/db';
 
 import { User } from './user';
+import { GraphqlContext } from '../interfaces';
+import JWTService from '../services/jwt';
 
 const typeDefs = `
 ${User.types}
@@ -25,11 +27,14 @@ export async function initServer() {
     app.use(bodyParser.json());
     app.use(cors());
     
-    const graphqlServer = new ApolloServer({ typeDefs, resolvers });
+    const graphqlServer = new ApolloServer<GraphqlContext>({ typeDefs, resolvers });
 
     try {
       await graphqlServer.start();
-      app.use('/graphql', expressMiddleware(graphqlServer));
+      app.use('/graphql', expressMiddleware(graphqlServer, {context: async ({req, res}) => {
+        return {
+          user: req.headers.authorization ? JWTService.decodeToken(req.headers.authorization.split("Bearer ")[1]) : undefined,};
+      }}));
     } catch (error) {
       console.error('Failed to start the GraphQL server:', error);
     }

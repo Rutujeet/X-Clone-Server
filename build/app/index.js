@@ -19,6 +19,7 @@ const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const express_1 = __importDefault(require("express"));
 const user_1 = require("./user");
+const jwt_1 = __importDefault(require("../services/jwt"));
 const typeDefs = `
 ${user_1.User.types}
   type Query {
@@ -36,7 +37,11 @@ function initServer() {
         const graphqlServer = new server_1.ApolloServer({ typeDefs, resolvers });
         try {
             yield graphqlServer.start();
-            app.use('/graphql', (0, express4_1.expressMiddleware)(graphqlServer));
+            app.use('/graphql', (0, express4_1.expressMiddleware)(graphqlServer, { context: (_a) => __awaiter(this, [_a], void 0, function* ({ req, res }) {
+                    return {
+                        user: req.headers.authorization ? jwt_1.default.decodeToken(req.headers.authorization.split("Bearer ")[1]) : undefined,
+                    };
+                }) }));
         }
         catch (error) {
             console.error('Failed to start the GraphQL server:', error);
