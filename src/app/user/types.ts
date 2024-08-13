@@ -6,5 +6,7 @@ type User {
     lastName: String
     email: String!
     profileImageUrl: String
+
+    posts: [Post]
 }
 `

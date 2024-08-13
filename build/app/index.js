@@ -19,16 +19,22 @@ const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const express_1 = __importDefault(require("express"));
 const user_1 = require("./user");
+const posts_1 = require("./posts");
 const jwt_1 = __importDefault(require("../services/jwt"));
 const typeDefs = `
 ${user_1.User.types}
+${posts_1.Post.types}
   type Query {
    ${user_1.User.queries}
+   ${posts_1.Post.queries}
+
+  }
+
+  type Mutation {
+    ${posts_1.Post.mutations}
   }
 `;
-const resolvers = {
-    Query: Object.assign({}, user_1.User.resolvers.queries)
-};
+const resolvers = Object.assign(Object.assign({ Query: Object.assign(Object.assign({}, user_1.User.resolvers.queries), posts_1.Post.resolvers.queries), Mutation: Object.assign({}, posts_1.Post.resolvers.mutations) }, posts_1.Post.resolvers.extraResolvers), user_1.User.resolvers.extraResolvers);
 function initServer() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = (0, express_1.default)();
@@ -37,11 +43,13 @@ function initServer() {
         const graphqlServer = new server_1.ApolloServer({ typeDefs, resolvers });
         try {
             yield graphqlServer.start();
-            app.use('/graphql', (0, express4_1.expressMiddleware)(graphqlServer, { context: (_a) => __awaiter(this, [_a], void 0, function* ({ req, res }) {
+            app.use('/graphql', (0, express4_1.expressMiddleware)(graphqlServer, {
+                context: (_a) => __awaiter(this, [_a], void 0, function* ({ req, res }) {
                     return {
                         user: req.headers.authorization ? jwt_1.default.decodeToken(req.headers.authorization.split("Bearer ")[1]) : undefined,
                     };
-                }) }));
+                })
+            }));
         }
         catch (error) {
             console.error('Failed to start the GraphQL server:', error);

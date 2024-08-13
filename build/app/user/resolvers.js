@@ -37,7 +37,8 @@ const queries = {
                 },
             });
         }
-        const userInDB = yield db_1.prismaClient.user.findUnique({ where: { email: data.email },
+        const userInDB = yield db_1.prismaClient.user.findUnique({
+            where: { email: data.email },
         });
         if (!userInDB)
             throw new Error('User with email not found');
@@ -53,4 +54,9 @@ const queries = {
         return user;
     })
 };
-exports.resolvers = { queries };
+const extraResolvers = {
+    User: {
+        posts: (parent) => db_1.prismaClient.post.findMany({ where: { author: { id: parent.id } } })
+    }
+};
+exports.resolvers = { queries, extraResolvers };
